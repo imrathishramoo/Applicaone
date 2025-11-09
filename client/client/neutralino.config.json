@@ -1,0 +1,61 @@
+{
+  "applicationId": "com.warriors.artillery.license",
+  "version": "1.0.0",
+  "defaultMode": "window",
+  "documentRoot": "/resources/",
+  "url": "/",
+  "enableServer": true,
+  "enableNativeAPI": true,
+  "nativeAllowList": [
+    "app.*",
+    "os.*",
+    "computer.*",
+    "debug.*",
+    "filesystem.*",
+    "window.*",
+    "events.*"
+  ],
+  "globalVariables": {
+    "TEST": "Test Value"
+  },
+  "modes": {
+    "window": {
+      "title": "Warriors Artillery License Activation",
+      "width": 900,
+      "height": 800,
+      "minWidth": 800,
+      "minHeight": 700,
+      "fullScreen": false,
+      "alwaysOnTop": false,
+      "icon": "/resources/icons/appIcon.png",
+      "enableInspector": false,
+      "borderless": false,
+      "maximize": false,
+      "hidden": false,
+      "resizable": true,
+      "exitProcessOnClose": true
+    },
+    "browser": {
+      "globalVariables": {
+        "TEST": "Test Value"
+      },
+      "nativeBlockList": [
+        "filesystem.*"
+      ]
+    },
+    "cloud": {
+      "url": "/resources/#cloud",
+      "nativeAllowList": [
+        "app.*"
+      ]
+    }
+  },
+  "cli": {
+    "binaryName": "warriors-artillery-license",
+    "resourcesPath": "/resources/",
+    "extensionsPath": "/extensions/",
+    "clientLibrary": "/resources/js/neutralino.js",
+    "binaryVersion": "4.9.0",
+    "clientVersion": "3.9.0"
+  }
+}
