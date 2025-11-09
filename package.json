@@ -1,0 +1,19 @@
+{
+    "name": "license-system",
+    "version": "1.0.0",
+    "description": "Hardware-bound license system with Gumroad integration",
+    "scripts": {
+        "start": "node main.js",
+        "dev": "nodemon main.js"
+    },
+    "dependencies": {
+        "axios": "^1.6.0",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "sqlite3": "^5.1.7"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.1"
+    }
+}
