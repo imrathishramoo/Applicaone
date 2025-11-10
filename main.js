@@ -4,8 +4,8 @@ const express = require('express');
 const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
 const axios = require('axios');
-const path = require('path');
 const app = express();
+
 
 // Middleware
 app.use(cors());
@@ -20,17 +20,8 @@ const VALIDATION_SALT = process.env.VALIDATION_SALT;
 const PORT = process.env.PORT || 3001;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// Database configuration for Railway
-const dbPath = process.env.NODE_ENV === 'production' 
-  ? '/data/licenses.db'  // Railway persistent storage
-  : './licenses.db';
-
-console.log(`📊 Database path: ${dbPath}`);
-console.log(`🌐 Environment: ${NODE_ENV}`);
-console.log(`🚀 Server will listen on: ${NODE_ENV === 'production' ? '0.0.0.0' : 'localhost'}`);
-
 // Database initialization
-const db = new sqlite3.Database(dbPath, (err) => {
+const db = new sqlite3.Database('./licenses.db', (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
     } else {
@@ -490,8 +481,6 @@ app.get('/admin/licenses', (req, res) => {
 app.get('/', (req, res) => {
     res.json({ 
         message: 'Hardware License Server is running!',
-        environment: NODE_ENV,
-        port: PORT,
         endpoints: {
             activate: 'POST /api/activate',
             validate: 'POST /api/validate',
@@ -501,16 +490,12 @@ app.get('/', (req, res) => {
     });
 });
 
-// Server configuration for Railway
-const HOST = NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
-
-app.listen(PORT, HOST, () => {
-    console.log(`🚀 License server running in ${NODE_ENV} mode`);
-    console.log(`🌐 Accessible at: http://${HOST}:${PORT}`);
+app.listen(PORT, () => {
+    console.log(`🚀 License server running on http://localhost:${PORT}`);
     console.log(`🔑 Gumroad API: ${GUMROAD_ACCESS_TOKEN ? 'CONFIGURED' : 'NOT CONFIGURED - PLEASE SET TOKEN'}`);
     console.log(`🔐 Using EXACT developer tool algorithm`);
     console.log(`📦 ENFORCING GUMROAD PURCHASE QUANTITY LIMITS`);
-    console.log(`📊 Database: ${dbPath}`);
+    console.log(`📊 Database: licenses.db`);
 });
 
 process.on('SIGINT', () => {
