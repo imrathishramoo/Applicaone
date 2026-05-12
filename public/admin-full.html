@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Warriors Artillery Admin Panel</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+<script>
+  // Immediately check if admin is logged in
+  (async function() {
+    try {
+      const response = await fetch('/api/admin/verify-session', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        window.location.href = '/admin/login';
+      }
+    } catch(e) {
+      window.location.href = '/admin/login';
+    }
+  })();
+</script>
+  <div class="container">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h2>Warriors Artillery</h2>
+        <div class="version">v4.0.0 Admin</div>
+      </div>
+      
+      <div class="nav">
+        <div class="nav-item active" data-tab="dashboard">
+          <i class="fas fa-tachometer-alt"></i>
+          <span>Dashboard</span>
+        </div>
+        <div class="nav-item" data-tab="licenses">
+          <i class="fas fa-key"></i>
+          <span>Licenses</span>
+        </div>
+        <div class="nav-item" data-tab="trials">
+          <i class="fas fa-clock"></i>
+          <span>Trials</span>
+        </div>
+        <div class="nav-item" data-tab="logs">
+          <i class="fas fa-clipboard-list"></i>
+          <span>Logs</span>
+        </div>
+        <div class="nav-item" data-tab="server">
+          <i class="fas fa-server"></i>
+          <span>Server Info</span>
+        </div>
+        <div class="nav-item" data-tab="tools">
+          <i class="fas fa-tools"></i>
+          <span>Tools</span>
+        </div>
+      </div>
+      
+      <div class="sidebar-footer">
+        <button class="btn btn-danger btn-sm" onclick="logout()" style="width: 100%;">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+    
+    <div class="main-content">
+      <div class="header">
+        <h1 id="pageTitle">Dashboard</h1>
+        <div class="header-actions">
+          <button class="btn btn-light" onclick="refreshData()">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+          <button class="btn btn-primary" onclick="showAddLicenseModal()">
+            <i class="fas fa-plus"></i> Add License
+          </button>
+        </div>
+      </div>
+      
+      <div id="dashboard" class="tab-content active">
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card"><i class="fas fa-key"></i><div class="value">Loading...</div><div class="label">Total Licenses</div></div>
+          <div class="stat-card"><i class="fas fa-clock"></i><div class="value">Loading...</div><div class="label">Active Trials</div></div>
+          <div class="stat-card"><i class="fas fa-history"></i><div class="value">Loading...</div><div class="label">Expired Trials</div></div>
+          <div class="stat-card"><i class="fas fa-chart-line"></i><div class="value">Loading...</div><div class="label">Bandwidth (Last 7 Days)</div></div>
+          <div class="stat-card"><i class="fas fa-file-alt"></i><div class="value">Loading...</div><div class="label">Log Entries</div></div>
+        </div>
+        
+        <div class="section">
+          <div class="section-header"><h2>Quick Actions</h2></div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-success" onclick="exportData()"><i class="fas fa-download"></i> Export Data</button>
+            <button class="btn btn-warning" onclick="showResetModal()"><i class="fas fa-redo"></i> Reset Database</button>
+            <button class="btn btn-info" onclick="clearExpiredTrials()"><i class="fas fa-trash"></i> Clear Expired Trials</button>
+            <button class="btn btn-light" onclick="showServerInfoModal()"><i class="fas fa-info-circle"></i> Server Info</button>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-header">
+            <h2><i class="fas fa-chart-line"></i> Bandwidth Usage <span style="font-size:13px;color:#999;font-weight:400;">Last 7 Days</span></h2>
+            <button class="btn btn-danger btn-sm" onclick="clearBandwidthLogs()"><i class="fas fa-trash"></i> Clear Logs</button>
+          </div>
+          <div id="bandwidthStats">Loading...</div>
+        </div>
+      </div>
+      
+      <div id="licenses" class="tab-content">
+        <div class="section">
+          <div class="section-header">
+            <h2>License Management</h2>
+            <button class="btn btn-primary" onclick="showAddLicenseModal()"><i class="fas fa-plus"></i> Add License</button>
+          </div>
+          <div id="licensesTable">Loading...</div>
+        </div>
+      </div>
+      
+      <div id="trials" class="tab-content">
+        <div class="section">
+          <div class="section-header"><h2>Trial Management</h2></div>
+          <div id="trialsContent">Loading...</div>
+        </div>
+      </div>
+      
+      <div id="logs" class="tab-content">
+        <div class="section">
+          <div class="section-header">
+            <h2>Server Logs</h2>
+            <button class="btn btn-danger" onclick="clearLogs()"><i class="fas fa-trash"></i> Clear Logs</button>
+          </div>
+          <div id="logsContent" style="max-height: 500px; overflow-y: auto;">Loading...</div>
+        </div>
+      </div>
+      
+      <div id="server" class="tab-content">
+        <div class="section">
+          <div class="section-header"><h2>Server Information</h2></div>
+          <div id="serverInfo">Loading...</div>
+        </div>
+      </div>
+      
+      <div id="tools" class="tab-content">
+        <div class="section">
+          <div class="section-header"><h2>Database Tools</h2></div>
+          <div class="form-group">
+            <label>Export Data</label>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+              <button class="btn btn-success" onclick="exportData('json')"><i class="fas fa-file-export"></i> Export as JSON</button>
+              <button class="btn btn-success" onclick="exportData('csv')"><i class="fas fa-file-csv"></i> Export as CSV</button>
+              <button class="btn btn-success" onclick="exportData('zip')"><i class="fas fa-file-archive"></i> Export as ZIP</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Database Maintenance</label>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+              <button class="btn btn-warning" onclick="vacuumDatabase()"><i class="fas fa-compress"></i> Vacuum Database</button>
+              <button class="btn btn-info" onclick="optimizeDatabase()"><i class="fas fa-tachometer-alt"></i> Optimize</button>
+              <button class="btn btn-light" onclick="showDatabaseInfo()"><i class="fas fa-info-circle"></i> Database Info</button>
+            </div>
+          </div>
+          <div class="danger-zone">
+            <h3><i class="fas fa-exclamation-triangle"></i> Danger Zone</h3>
+            <p>These actions cannot be undone. Proceed with extreme caution.</p>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+              <button class="btn btn-danger" onclick="showResetModal()"><i class="fas fa-redo"></i> Reset Database</button>
+              <button class="btn btn-danger" onclick="deleteAllLicenses()"><i class="fas fa-trash"></i> Delete All Licenses</button>
+              <button class="btn btn-danger" onclick="deleteAllTrials()"><i class="fas fa-trash"></i> Delete All Trials</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modals (same as before) -->
+  <div id="licenseModal" class="modal"><div class="modal-content"><div class="modal-header"><h3 id="modalTitle">Add License</h3><button class="close-modal" onclick="closeModal()">&times;</button></div><div class="modal-body"><form id="licenseForm"><input type="hidden" id="licenseId"><div class="form-row"><div class="form-group"><label for="licenseKey">License Key *</label><input type="text" id="licenseKey" class="form-control" required></div><div class="form-group"><label for="email">Email *</label><input type="email" id="email" class="form-control" required></div></div><div class="form-row"><div class="form-group"><label for="productName">Product Name</label><input type="text" id="productName" class="form-control"></div><div class="form-group"><label for="purchaseId">Purchase ID</label><input type="text" id="purchaseId" class="form-control"></div></div><div class="form-row"><div class="form-group"><label for="fingerprint">System Fingerprint</label><input type="text" id="fingerprint" class="form-control"></div><div class="form-group"><label for="maxActivations">Max Activations</label><input type="number" id="maxActivations" class="form-control" value="1" min="1"></div></div><div class="form-row"><div class="form-group"><label for="price">Price (cents)</label><input type="number" id="price" class="form-control" value="0"></div><div class="form-group"><label for="currency">Currency</label><input type="text" id="currency" class="form-control" value="USD"></div></div><div class="form-group"><label for="notes">Notes</label><textarea id="notes" class="form-control" rows="3"></textarea></div><div class="form-group"><div style="display: flex; align-items: center; gap: 10px;"><input type="checkbox" id="refunded"><label for="refunded" style="margin: 0;">Mark as refunded</label></div></div></form></div><div class="modal-footer"><button class="btn btn-light" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveLicense()">Save License</button></div></div></div>
+  
+  <div id="viewLicenseModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>License Details</h3><button class="close-modal" onclick="closeViewModal()">&times;</button></div><div class="modal-body" id="viewLicenseContent"></div><div class="modal-footer"><button class="btn btn-light" onclick="closeViewModal()">Close</button></div></div></div>
+  
+  <div id="resetModal" class="modal"><div class="modal-content"><div class="modal-header"><h3><i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> Reset Database</h3><button class="close-modal" onclick="closeResetModal()">&times;</button></div><div class="modal-body"><p>This will <strong>permanently delete all data</strong> including licenses, trials, and logs. This action cannot be undone!</p><div class="form-group" style="margin-top: 20px;"><label for="confirmText">Type "RESET" to confirm:</label><input type="text" id="confirmText" class="form-control" placeholder="Type RESET here"></div></div><div class="modal-footer"><button class="btn btn-light" onclick="closeResetModal()">Cancel</button><button class="btn btn-danger" onclick="resetDatabase()">Reset Database</button></div></div></div>
+  
+  <div id="serverInfoModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Server Information</h3><button class="close-modal" onclick="closeServerInfoModal()">&times;</button></div><div class="modal-body" id="serverInfoContent"></div><div class="modal-footer"><button class="btn btn-light" onclick="closeServerInfoModal()">Close</button></div></div></div>
+  
+  <div id="databaseInfoModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Database Information</h3><button class="close-modal" onclick="closeDatabaseInfoModal()">&times;</button></div><div class="modal-body" id="databaseInfoContent"></div><div class="modal-footer"><button class="btn btn-light" onclick="closeDatabaseInfoModal()">Close</button></div></div></div>
+  
+  <script src="/admin.js"></script>
+  <script>
+    // Load dynamic data after page loads
+    async function loadDynamicData() {
+      try {
+        const [stats, licenses, trials, logs, bandwidth] = await Promise.all([
+          fetch('/api/admin/stats', { credentials: 'include' }).then(r => r.json()),
+          fetch('/api/admin/licenses?limit=100', { credentials: 'include' }).then(r => r.json()),
+          fetch('/api/admin/trials', { credentials: 'include' }).then(r => r.json()),
+          fetch('/api/admin/logs?limit=50', { credentials: 'include' }).then(r => r.json()),
+          fetch('/api/admin/bandwidth-stats?period=week', { credentials: 'include' }).then(r => r.json())
+        ]);
+        
+        // Update UI with data
+        updateStats(stats);
+        updateLicenses(licenses);
+        updateTrials(trials);
+        updateLogs(logs);
+        updateBandwidth(bandwidth);
+        updateServerInfo(stats);
+      } catch (err) {
+        console.error('Failed to load data:', err);
+      }
+    }
+    
+    function updateStats(s) {
+      document.getElementById('statsGrid').innerHTML = `
+        <div class="stat-card"><i class="fas fa-key"></i><div class="value">${s.total_licenses}</div><div class="label">Total Licenses</div></div>
+        <div class="stat-card"><i class="fas fa-clock"></i><div class="value">${s.active_trials}</div><div class="label">Active Trials</div></div>
+        <div class="stat-card"><i class="fas fa-history"></i><div class="value">${s.expired_trials}</div><div class="label">Expired Trials</div></div>
+        <div class="stat-card"><i class="fas fa-chart-line"></i><div class="value">${s.bandwidth_7d}</div><div class="label">Bandwidth (Last 7 Days)</div></div>
+        <div class="stat-card"><i class="fas fa-file-alt"></i><div class="value">${s.total_logs}</div><div class="label">Log Entries</div></div>
+      `;
+    }
+    
+    function updateLicenses(licenses) {
+      const container = document.getElementById('licensesTable');
+      if (!licenses.length) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px;">No licenses found.</div>';
+        return;
+      }
+      container.innerHTML = `<div style="overflow-x: auto;"><table><thead><tr><th>ID</th><th>License Key</th><th>Email</th><th>Product</th><th>Activations</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>${licenses.map(l => `<tr><td>${l.id}</td><td><code>${l.license_key}</code></td><td>${l.gumroad_email}</td><td>${l.product_name}</td><td><span class="badge ${l.activation_count >= l.max_activations ? 'badge-danger' : 'badge-success'}">${l.activation_count}/${l.max_activations}</span></td><td>${l.refunded ? '<span class="badge badge-danger">Refunded</span>' : '<span class="badge badge-success">Active</span>'}</td><td>${new Date(l.created_at).toLocaleDateString()}</td><td><div class="action-buttons"><button class="btn btn-sm btn-edit" onclick="editLicense(${l.id})"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-delete" onclick="deleteLicense('${l.license_key}')"><i class="fas fa-trash"></i></button></div></td></tr>`).join('')}</tbody></table></div>`;
+    }
+    
+    function updateTrials(trials) {
+      const now = Date.now();
+      const active = trials.filter(t => now < t.endTime);
+      const expired = trials.filter(t => now >= t.endTime);
+      document.getElementById('trialsContent').innerHTML = `
+        <div class="tabs"><button class="tab active" onclick="showTrialTab('active')">Active (${active.length})</button><button class="tab" onclick="showTrialTab('expired')">Expired (${expired.length})</button></div>
+        <div id="activeTrials">${active.length ? `<table><thead><tr><th>Fingerprint</th><th>Start</th><th>End</th><th>Remaining</th><th>Actions</th></tr></thead><tbody>${active.map(t => `<tr><td><code>${t.fingerprint.substring(0,20)}...</code></td><td>${new Date(t.startTime).toLocaleString()}</td><td>${new Date(t.endTime).toLocaleString()}</td><td><span class="badge badge-success">${Math.round((t.endTime-now)/3600000)} hours</span></td><td><button class="btn btn-sm btn-delete" onclick="deleteTrial('${t.fingerprint}')"><i class="fas fa-trash"></i></button></td></tr>`).join('')}</tbody></table>` : '<p>No active trials.</p>'}</div>
+        <div id="expiredTrials" style="display:none;">${expired.length ? `<table><thead><tr><th>Fingerprint</th><th>Start</th><th>End</th><th>Status</th><th>Actions</th></tr></thead><tbody>${expired.map(t => `<tr><td><code>${t.fingerprint.substring(0,20)}...</code></td><td>${new Date(t.startTime).toLocaleString()}</td><td>${new Date(t.endTime).toLocaleString()}</td><td><span class="badge badge-danger">Expired</span></td><td><button class="btn btn-sm btn-delete" onclick="deleteTrial('${t.fingerprint}')"><i class="fas fa-trash"></i></button></td></tr>`).join('')}</tbody></table>` : '<p>No expired trials.</p>'}</div>
+      `;
+    }
+    
+    function updateLogs(logs) {
+      const container = document.getElementById('logsContent');
+      if (!logs.length) { container.innerHTML = '<p>No logs found.</p>'; return; }
+      container.innerHTML = logs.map(l => `<div class="log-entry"><span class="log-level ${l.level}">${l.level.toUpperCase()}</span> <span>${new Date(l.created_at).toLocaleString()}</span><div>${l.message}</div></div>`).join('');
+    }
+    
+    function updateBandwidth(b) {
+      document.getElementById('bandwidthStats').innerHTML = `<div class="stats-grid"><div class="stat-card"><div class="value">${b.total_bandwidth_formatted}</div><div class="label">Total Bandwidth</div></div><div class="stat-card"><div class="value">${b.total_requests || 0}</div><div class="label">Total Requests</div></div></div><div style="margin-top:20px;"><h3>Top Endpoints</h3><table><thead><tr><th>Endpoint</th><th>Requests</th><th>Bandwidth</th></tr></thead><tbody>${b.by_endpoint?.map(ep => `<tr><td><code>${ep.endpoint}</code></td><td>${ep.request_count}</td><td>${ep.total_formatted}</td></tr>`).join('') || '<tr><td colspan="3">No data</td></tr>'}</tbody></table></div>`;
+    }
+    
+    function updateServerInfo(s) {
+      document.getElementById('serverInfo').innerHTML = `<div class="form-row"><div class="form-group"><label>Server Status</label><div style="padding:10px;background:#d4edda;border-radius:6px;">Running on port ${s.port}</div></div><div class="form-group"><label>Gumroad</label><div style="padding:10px;background:${s.gumroad_configured ? '#d4edda' : '#fff3cd'};border-radius:6px;">${s.gumroad_configured ? 'Configured' : 'Test Mode'}</div></div></div><div class="form-group"><label>System</label><div style="padding:10px;background:#f8f9fa;border-radius:6px;">Node ${s.node_version} | ${s.platform} | ${s.memory_mb} MB</div></div>`;
+    }
+    
+    window.showTrialTab = function(type) {
+      document.getElementById('activeTrials').style.display = type === 'active' ? 'block' : 'none';
+      document.getElementById('expiredTrials').style.display = type === 'expired' ? 'block' : 'none';
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+    };
+    
+    // Load data when page loads
+    loadDynamicData();
+  </script>
+</body>
+
+</html>
