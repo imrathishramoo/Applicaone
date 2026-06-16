@@ -57,7 +57,7 @@ const expectedFiles = [
   { appId: 'app3', filename: 'viz.enc',   name: 'Vision Board' },
   { appId: 'app4', filename: 'work.enc',  name: 'Work Monitor' },
   { appId: 'app5', filename: 'wall.enc',  name: 'Fire Quotes' },
-  { appId: 'app6', filename: 'trial.enc', name: 'Trial App' }
+  { appId: 'app6', filename: 'jou.enc', name: 'Trial App' }
 ];
 
 // ====== MIDDLEWARE ======
